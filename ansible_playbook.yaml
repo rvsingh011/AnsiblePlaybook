@@ -1,83 +1,91 @@
 - hosts: localhost
   tasks:
-    - name: Create Web Application
-      k8s:
-        api_version: v1
-        namespace: default
-        definition:
-          kind: Deployment
-          metadata:
-            name: knote
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app: knote
-            template:
-              metadata:
-                labels:
-                  app: knote
-              spec:
-                containers:
-                  - name: app
-                    image: rvsingh011/hackathon-starter_web
-                    ports:
-                      - containerPort: 8080
-                    env:
-                      - name: MONGODB_URI
-                        value: mongodb://mongo:27017/test
-                    imagePullPolicy: Always
+    - name: REST API CALL / POST
+      uri:
+          url: https://containers.cloud.ibm.com/global/v1/clusters/{{ cluster_id }}/config
+          method: GET
+          headers: 
+            Authorization: "{{ IC_IAM_TOKEN }}"
+            X-Auth-Refresh-Token: "{{ IC_IAM_REFRESH_TOKEN }}"
 
-    - name: Create web service 
-      k8s:
-        api_version: v1
-        namespace: default
-        definition:
-          kind: Service
-          metadata:
-            name: knote
-          spec:
-            selector:
-              app: knote
-            ports:
-              - port: 80
-                targetPort: 8080
-            type: LoadBalancer     
+    # - name: Create Web Application
+    #   k8s:
+    #     api_version: v1
+    #     namespace: default
+    #     definition:
+    #       kind: Deployment
+    #       metadata:
+    #         name: knote
+    #       spec:
+    #         replicas: 1
+    #         selector:
+    #           matchLabels:
+    #             app: knote
+    #         template:
+    #           metadata:
+    #             labels:
+    #               app: knote
+    #           spec:
+    #             containers:
+    #               - name: app
+    #                 image: rvsingh011/hackathon-starter_web
+    #                 ports:
+    #                   - containerPort: 8080
+    #                 env:
+    #                   - name: MONGODB_URI
+    #                     value: mongodb://mongo:27017/test
+    #                 imagePullPolicy: Always
 
-    - name: Create Database service 
-      k8s:
-        api_version: v1
-        namespace: default
-        definition:
-          kind: Deployment
-          metadata:
-            name: mongo
-          spec:
-            selector:
-              matchLabels:
-                app: mongo
-            template:
-              metadata:
-                labels:
-                  app: mongo
-              spec:
-                containers:
-                  - name: mongo
-                    image: mongo
-                    ports:
-                      - containerPort: 27017
+    # - name: Create web service 
+    #   k8s:
+    #     api_version: v1
+    #     namespace: default
+    #     definition:
+    #       kind: Service
+    #       metadata:
+    #         name: knote
+    #       spec:
+    #         selector:
+    #           app: knote
+    #         ports:
+    #           - port: 80
+    #             targetPort: 8080
+    #         type: LoadBalancer     
 
-    - name: Mongo Service 
-      k8s:
-        api_version: v1
-        namespace: default
-        definition:
-          kind: Service
-          metadata:
-            name: mongo
-          spec:
-            selector:
-              app: mongo
-            ports:
-              - port: 27017
-                targetPort: 27017
+    # - name: Create Database service 
+    #   k8s:
+    #     api_version: v1
+    #     namespace: default
+    #     definition:
+    #       kind: Deployment
+    #       metadata:
+    #         name: mongo
+    #       spec:
+    #         selector:
+    #           matchLabels:
+    #             app: mongo
+    #         template:
+    #           metadata:
+    #             labels:
+    #               app: mongo
+    #           spec:
+    #             containers:
+    #               - name: mongo
+    #                 image: mongo
+    #                 ports:
+    #                   - containerPort: 27017
+
+    # - name: Mongo Service 
+    #   k8s:
+    #     api_version: v1s
+    #     namespace: default
+    #     definition:
+    #       kind: Service
+    #       metadata:
+    #         name: mongo
+    #       spec:
+    #         selector:
+    #           app: mongo
+    #         ports:
+    #           - port: 27017
+    #             targetPort: 27017
