@@ -1,12 +1,11 @@
 - hosts: localhost
   tasks:
     - name: REST API CALL / POST
-      uri:
+      get_url:
           url: https://containers.cloud.ibm.com/global/v1/clusters/{{ cluster_id }}/config
+          dest: /tmp/hello
           method: GET
-          headers: 
-            Authorization: "{{ IC_IAM_TOKEN }}"
-            X-Auth-Refresh-Token: "{{ IC_IAM_REFRESH_TOKEN }}"
+          headers: 'Authorization: "{{ IC_IAM_TOKEN }}",X-Auth-Refresh-Token: "{{ IC_IAM_REFRESH_TOKEN }}"'
 
     # - name: Create Web Application
     #   k8s:
