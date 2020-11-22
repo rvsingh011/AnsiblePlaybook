@@ -1,90 +1,122 @@
 - hosts: localhost
+  vars:
+    zip_path: /Users/ravisingh/Desktop/output/kubeConfig-{{ cluster_id }}.zip
+    kube_config_path: /Users/ravisingh/Desktop/output/kubeConfig-{{ cluster_id }}
   tasks:
-    - name: REST API CALL / POST
+    - name: Download kubeconfig
       get_url:
           url: https://containers.cloud.ibm.com/global/v1/clusters/{{ cluster_id }}/config
-          dest: /tmp/hello
-          method: GET
-          headers: 'Authorization: "{{ IC_IAM_TOKEN }}",X-Auth-Refresh-Token: "{{ IC_IAM_REFRESH_TOKEN }}"'
+          dest: "{{ zip_path }}"
+          headers: 'Authorization="{{ IC_IAM_TOKEN }}",X-Auth-Refresh-Token="{{ IC_IAM_REFRESH_TOKEN }}"'
+          force: yes
 
-    # - name: Create Web Application
-    #   k8s:
-    #     api_version: v1
-    #     namespace: default
-    #     definition:
-    #       kind: Deployment
-    #       metadata:
-    #         name: knote
-    #       spec:
-    #         replicas: 1
-    #         selector:
-    #           matchLabels:
-    #             app: knote
-    #         template:
-    #           metadata:
-    #             labels:
-    #               app: knote
-    #           spec:
-    #             containers:
-    #               - name: app
-    #                 image: rvsingh011/hackathon-starter_web
-    #                 ports:
-    #                   - containerPort: 8080
-    #                 env:
-    #                   - name: MONGODB_URI
-    #                     value: mongodb://mongo:27017/test
-    #                 imagePullPolicy: Always
+    - name: Delete earlier instances of kube config
+      file:
+        path: "{{ kube_config_path }}"
+        state: absent
 
-    # - name: Create web service 
-    #   k8s:
-    #     api_version: v1
-    #     namespace: default
-    #     definition:
-    #       kind: Service
-    #       metadata:
-    #         name: knote
-    #       spec:
-    #         selector:
-    #           app: knote
-    #         ports:
-    #           - port: 80
-    #             targetPort: 8080
-    #         type: LoadBalancer     
+    - name: ansible create directory for unzip kubeconfig
+      file:
+        path: "{{ kube_config_path }}"
+        state: directory
 
-    # - name: Create Database service 
-    #   k8s:
-    #     api_version: v1
-    #     namespace: default
-    #     definition:
-    #       kind: Deployment
-    #       metadata:
-    #         name: mongo
-    #       spec:
-    #         selector:
-    #           matchLabels:
-    #             app: mongo
-    #         template:
-    #           metadata:
-    #             labels:
-    #               app: mongo
-    #           spec:
-    #             containers:
-    #               - name: mongo
-    #                 image: mongo
-    #                 ports:
-    #                   - containerPort: 27017
+    - name: Unzip kube config 
+      unarchive:
+        src: "{{ zip_path }}"
+        dest: "{{ kube_config_path }}"
+        keep_newer: yes
 
-    # - name: Mongo Service 
-    #   k8s:
-    #     api_version: v1s
-    #     namespace: default
-    #     definition:
-    #       kind: Service
-    #       metadata:
-    #         name: mongo
-    #       spec:
-    #         selector:
-    #           app: mongo
-    #         ports:
-    #           - port: 27017
-    #             targetPort: 27017
+    - name: Read config.yaml
+      shell:
+        cmd: find "{{kube_config_path}}" -name "*.yml"
+      register: kube_config
+
+    - name: Display the kubeconfig file path
+      debug:
+        var: kube_config.stdout
+
+    - name: Create Web Application
+      k8s:
+        kubeconfig: "{{ kube_config.stdout }}"
+        api_version: v1
+        namespace: default
+        definition:
+          kind: Deployment
+          metadata:
+            name: knote
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: knote
+            template:
+              metadata:
+                labels:
+                  app: knote
+              spec:
+                containers:
+                  - name: app
+                    image: rvsingh011/hackathon-starter_web
+                    ports:
+                      - containerPort: 8080
+                    env:
+                      - name: MONGODB_URI
+                        value: mongodb://mongo:27017/test
+                    imagePullPolicy: Always
+
+    - name: Create web service 
+      k8s:
+        kubeconfig: "{{ kube_config.stdout }}"
+        api_version: v1
+        namespace: default
+        definition:
+          kind: Service
+          metadata:
+            name: knote
+          spec:
+            selector:
+              app: knote
+            ports:
+              - port: 80
+                targetPort: 8080
+            type: LoadBalancer     
+
+    - name: Create Database service 
+      k8s:
+        kubeconfig: "{{ kube_config.stdout }}"
+        api_version: v1
+        namespace: default
+        definition:
+          kind: Deployment
+          metadata:
+            name: mongo
+          spec:
+            selector:
+              matchLabels:
+                app: mongo
+            template:
+              metadata:
+                labels:
+                  app: mongo
+              spec:
+                containers:
+                  - name: mongo
+                    image: mongo
+                    ports:
+                      - containerPort: 27017
+
+    - name: Mongo Service 
+      k8s:
+        kubeconfig: "{{ kube_config.stdout }}"
+        api_version: v1
+        namespace: default
+        definition:
+          kind: Service
+          metadata:
+            name: mongo
+          spec:
+            selector:
+              app: mongo
+            ports:
+              - port: 27017
+                targetPort: 27017
