@@ -1,7 +1,7 @@
 - hosts: localhost
   vars:
-    zip_path: /Users/ravisingh/Desktop/output/kubeConfig-{{ cluster_id }}.zip
-    kube_config_path: /Users/ravisingh/Desktop/output/kubeConfig-{{ cluster_id }}
+    zip_path: /tmp/kubeConfig-{{ cluster_id }}.zip
+    kube_config_path: /tmp/kubeConfig-{{ cluster_id }}
   tasks:
     - name: Download kubeconfig
       get_url:
