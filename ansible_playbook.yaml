@@ -6,10 +6,7 @@
     IC_IAM_TOKEN: "{{ lookup('env','IC_IAM_TOKEN') }}"
     IC_IAM_REFRESH_TOKEN: "{{ lookup('env','IC_IAM_REFRESH_TOKEN') }}"
   tasks:
-    - name: Display the token
-      debug:
-        msg: System {{ IC_IAM_TOKEN }} has uuid {{ IC_IAM_REFRESH_TOKEN }}
-        
+
     - name: Download kubeconfig
       get_url:
           url: https://containers.cloud.ibm.com/global/v1/clusters/{{ cluster_id }}/config
