@@ -1,18 +1,25 @@
 - hosts: localhost
   vars:
+    temp_path: /tmp
     zip_path: /tmp/kubeConfig-{{ cluster_id }}.zip
     kube_config_path: /tmp/kubeConfig-{{ cluster_id }}
-    IC_IAM_TOKEN: "{{ lookup(‘env’,‘IC_IAM_TOKEN’) }}"
-    IC_IAM_REFRESH_TOKEN: "{{ lookup(‘env’,IC_IAM_REFRESH_TOKEN) }}"
+    IC_IAM_TOKEN: "{{ lookup('env','IC_IAM_TOKEN') }}"
+    IC_IAM_REFRESH_TOKEN: "{{ lookup('env','IC_IAM_REFRESH_TOKEN') }}"
   tasks:
+    - name: Display the token
+      debug:
+        msg: System {{ IC_IAM_TOKEN }} has uuid {{ IC_IAM_REFRESH_TOKEN }}
+        
     - name: Download kubeconfig
       get_url:
           url: https://containers.cloud.ibm.com/global/v1/clusters/{{ cluster_id }}/config
           dest: "{{ zip_path }}"
-          headers: 'Authorization="{{ IC_IAM_TOKEN }}",X-Auth-Refresh-Token="{{ IC_IAM_REFRESH_TOKEN }}"'
           force: yes
-
-    - name: Delete earlier instances of kube config
+          headers: 
+            Authorization: '{{ IC_IAM_TOKEN }}'
+            X-Auth-Refresh-Token: '{{ IC_IAM_REFRESH_TOKEN }}'
+          
+    - name: Delete earlier instances of kube config if any
       file:
         path: "{{ kube_config_path }}"
         state: absent
@@ -22,13 +29,11 @@
         path: "{{ kube_config_path }}"
         state: directory
 
-    - name: Unzip kube config 
-      unarchive:
-        src: "{{ zip_path }}"
-        dest: "{{ kube_config_path }}"
-        keep_newer: yes
+    - name: Unzip Kube config
+      shell:
+        cmd: /usr/bin/unzip "{{ zip_path }}" -d "{{ kube_config_path }}"
 
-    - name: Read config.yaml
+    - name: Read config.yaml into kube_config var
       shell:
         cmd: find "{{kube_config_path}}" -name "*.yml"
       register: kube_config
