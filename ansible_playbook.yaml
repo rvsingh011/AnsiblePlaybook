@@ -2,6 +2,8 @@
   vars:
     zip_path: /tmp/kubeConfig-{{ cluster_id }}.zip
     kube_config_path: /tmp/kubeConfig-{{ cluster_id }}
+    IC_IAM_TOKEN: "{{ lookup(‘env’,‘IC_IAM_TOKEN’) }}"
+    IC_IAM_REFRESH_TOKEN: "{{ lookup(‘env’,IC_IAM_REFRESH_TOKEN) }}"
   tasks:
     - name: Download kubeconfig
       get_url:
