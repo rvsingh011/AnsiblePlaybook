@@ -2,4 +2,4 @@
   tasks:
     - name: Echo Hello World
       shell:
-        cmd: echo "hello world"
+        cmd: echo "new world"
